@@ -5,6 +5,6 @@
     <list>
         <mapping class="com.qiuwenyi.coolweather.db.Province" />
         <mapping class="com.qiuwenyi.coolweather.db.City" />
-        <mapping class="com.qiuwenyi.coolweather.db.Country" />
+        <mapping class="com.qiuwenyi.coolweather.db.County" />
     </list>
 </litepal>
