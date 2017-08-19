@@ -2,9 +2,11 @@ package com.qiuwenyi.coolweather.util;
 
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
 import com.qiuwenyi.coolweather.db.City;
 import com.qiuwenyi.coolweather.db.County;
 import com.qiuwenyi.coolweather.db.Province;
+import com.qiuwenyi.coolweather.gson.Weather;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -87,6 +89,33 @@ public class Utility {
             }
         }
         return false;
+    }
+
+    /**
+     * 将返回的JSOM数据解析成Weather实体类
+     * 解析天气JSON数据的方法
+     * 可以看到，handleWeatherResponse（）方法中先是通过JSONObject和JSONArray将天气数据中的主体内容解析出来，即如下内容：
+     * {
+     *     "status":"ok",
+     *     "basic":{},
+     *     "aqi":{},
+     *     "now":{},
+     *     "suggestion":{},
+     *     "daily_forecast":{}
+     * }
+     * 然后由于我们之前已经按照上面的数据格式定义过相应的GSON实体类，因此只需要通过调用fromJson（）方法就能直接将JSON
+     * 数据转换成Weather对象了。
+     */
+    public static Weather handleWeatherResponse(String response) {
+        try {
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather");
+            String weatherContent = jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContent, Weather.class);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
