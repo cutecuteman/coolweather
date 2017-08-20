@@ -4,7 +4,16 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="?attr/actionBarSize">
-
+    <!--添加一个Button作为切换城市的按钮，并且让他居左显示，另外，
+        我们提前准备好了一张图片来作为按钮的背景图片-->
+    <Button
+        android:id="@+id/nav_button"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_margin="10dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:background="@mipmap/ic_home"/>
     <TextView
         android:id="@+id/title_city"
         android:layout_width="wrap_content"

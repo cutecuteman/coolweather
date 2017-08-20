@@ -5,9 +5,13 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -46,7 +50,13 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView carWashText;//洗车指数
     private TextView sportText;//运动指数
 
-    private ImageView bingPicImag;
+    private ImageView bingPicImag;//背景图片
+
+    public SwipeRefreshLayout swipeRefreshLayout;//下拉刷新
+    private String mWeatherId;//定义一个mWeaherId变量，用于记录城市的天气id，
+
+    public DrawerLayout drawerLayout;
+    private Button navButton;
 
     /**
      * 在onCreate（）方法中任然是先去获取一些控件的实例，然后会尝试从本地缓存中读取天气数据，那么第一次肯定没有缓存的，
@@ -86,18 +96,43 @@ public class WeatherActivity extends AppCompatActivity {
         comfortText = (TextView) findViewById(R.id.comfort_text);
         carWashText = (TextView) findViewById(R.id.car_wash_text);
         sportText = (TextView) findViewById(R.id.sport_text);
+        /**
+         * 获取SwipeRefreshLayout的实例，然后调用setColorSchemeResources（）方法来设置下拉刷新进度条的颜色。
+         * 这里使用了主题中的colorPrimary作为进度条的颜色了，接着定义一个mWeaherId变量，用于记录城市的天气id，
+         * 然后调用setOnRefreshListener（）方法来设置一个下拉刷新的监听器，当触发下拉刷新操作的时候，就会回调这个监听器的
+         * onRefresh方法，我们在这里去调用requestWeather（）方法的请求天气信息就可以了。
+         */
+
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = prefs.getString("weather", null);
         if (weatherString != null) {
             //有缓存时直接解析天气数据
             Weather weather = Utility.handleWeatherResponse(weatherString);
+
+            mWeatherId = weather.basic.weatherId;//定义一个mWeaherId变量，用于记录城市的天气id，
+
             showWeatherInfo(weather);
         } else {
             //无缓存时去服务器查询天气
-            String weatherId = getIntent().getStringExtra("weather_id");//从Intent中 取出天气id
+//            String weatherId = getIntent().getStringExtra("weather_id");//从Intent中 取出天气id
+            mWeatherId = getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);//注意，请求数据的时候将ScrollView进行隐藏，不然空数据的界面看上去会很奇怪。
-            requestWeather(weatherId);//并调用requestWeather（）方法从服务器请求天气数据
+//            requestWeather(weatherId);//并调用requestWeather（）方法从服务器请求天气数据
+            requestWeather(mWeatherId);
         }
+        /**
+         * 然后调用setOnRefreshListener（）方法来设置一个下拉刷新的监听器，当触发下拉刷新操作的时候，就会回调这个监听器的
+         * onRefresh方法，我们在这里去调用requestWeather（）方法的请求天气信息就可以了。
+         */
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(mWeatherId);
+            }
+        });
         /**
          * 加载必应每日一图
          * 首先在onCreate（）方法中获取了新增控件ImageVIew的实例，然后尝试从SharePreferences中读取缓存的背景图片，
@@ -109,6 +144,21 @@ public class WeatherActivity extends AppCompatActivity {
         } else {
             loadBingPic();
         }
+        /**
+         * 首先在onCreate（）方法中获取到新增的DrawerLayout和Button的实例，然后在Button的点击事件中调用DrawerLayout的openDrawer（）
+         * 的方法打开滑动菜单就可以了。
+         * 不过现在还没结束，因为这仅仅是打开了滑动菜单而已，我们还需要处理城市后的逻辑才行，这个工作就必须要在ChooseAreaFragment中进行了，
+         * 因为之前选中了某个城市后跳转到WeatherActivity的，而现在由于我们本来就是在WeatherActivity当中的，因此并不需要跳转，
+         * 只是去请求新选择城市的天气信息就可以了。
+         */
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        navButton = (Button) findViewById(R.id.nav_button);
+        navButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                drawerLayout.openDrawer(GravityCompat.START);//调用DrawerLayout的openDrawer（）的方法打开滑动菜单就可以了。
+            }
+        });
     }
 
     /**
@@ -160,6 +210,8 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
+                        //另外不要忘记，当请求结束后，还需要调用SwipeRefreshLayout的setRefreshing（）方法并传入false，用于表示刷新事件的结束，并隐藏刷新进度条。
+                        swipeRefreshLayout.setRefreshing(false);
                     }
                 });
             }
@@ -179,6 +231,8 @@ public class WeatherActivity extends AppCompatActivity {
                         } else {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
                         }
+                        //另外不要忘记，当请求结束后，还需要调用SwipeRefreshLayout的setRefreshing（）方法并传入false，用于表示刷新事件的结束，并隐藏刷新进度条。
+                        swipeRefreshLayout.setRefreshing(false);
                     }
                 });
             }
