@@ -1,5 +1,6 @@
 package com.qiuwenyi.coolweather;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.qiuwenyi.coolweather.gson.Forecast;
 import com.qiuwenyi.coolweather.gson.Weather;
+import com.qiuwenyi.coolweather.service.AutoUpdateService;
 import com.qiuwenyi.coolweather.util.HttpUtil;
 import com.qiuwenyi.coolweather.util.Utility;
 
@@ -281,5 +283,11 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText.setText(carWash);
         sportText.setText(sport);
         weatherLayout.setVisibility(View.VISIBLE);
+        /**
+         * 在showWeather（）方法中的最后启动AutoUpdateService这个服务的代码，这样只要一旦选中了某个城市并更新天气之后，
+         * AutoUpdateService就会一直在后台运行，并保证8小时更新一次天气。
+         */
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 }
